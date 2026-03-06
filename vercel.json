@@ -1,0 +1,8 @@
+{
+  "rewrites": [
+    {
+      "source": "/",
+      "destination": "/nventr-website-v6.html"
+    }
+  ]
+}
