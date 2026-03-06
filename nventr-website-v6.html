@@ -1,0 +1,493 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>nventr: The Operating System for Robots</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=Space+Grotesk:wght@300;400;500;600;700&family=JetBrains+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+
+:root {
+  --bg: #0a0d10;
+  --bg-2: #0f1318;
+  --bg-3: #151a20;
+  --bg-4: #1a2028;
+  --border: rgba(0,229,208,0.08);
+  --border-bright: rgba(0,229,208,0.18);
+  --text: #e2e8f0;
+  --text-mid: #9aaab8;
+  --text-dim: #6a7d92;
+  --cyan: #00e5d0;
+  --cyan-dim: #00bfad;
+  --cyan-pale: rgba(0,229,208,0.06);
+  --cyan-glow: rgba(0,229,208,0.15);
+  --white: #ffffff;
+  --red: #ff4466;
+  --heading: 'Outfit', sans-serif;
+  --body: 'Space Grotesk', sans-serif;
+  --mono: 'JetBrains Mono', monospace;
+}
+
+body { font-family: var(--body); background: var(--bg); color: var(--text); overflow-x: hidden; }
+
+/* NAV */
+nav {
+  position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 0 48px; height: 64px;
+  background: rgba(10,13,16,0.88); backdrop-filter: blur(20px);
+  border-bottom: 1px solid var(--border);
+}
+.logo { display: flex; align-items: center; gap: 10px; text-decoration: none; }
+.logo-icon { width: 26px; height: 26px; position: relative; }
+.logo-icon::before, .logo-icon::after { content: ''; position: absolute; background: var(--cyan); }
+.logo-icon::before { width: 2px; height: 100%; left: 50%; transform: translateX(-50%); }
+.logo-icon::after { width: 100%; height: 2px; top: 50%; transform: translateY(-50%); }
+.logo-icon span { position: absolute; width: 2px; height: 100%; background: var(--cyan); left: 50%; top: 0; }
+.logo-icon span:nth-child(1) { transform: rotate(45deg); }
+.logo-icon span:nth-child(2) { transform: rotate(-45deg); }
+.logo-text { font-family: var(--heading); font-size: 22px; font-weight: 600; color: var(--white); }
+.nav-links { display: flex; gap: 28px; list-style: none; }
+.nav-links a { font-size: 13px; font-weight: 500; color: var(--text-mid); text-decoration: none; transition: color 0.2s; }
+.nav-links a:hover { color: var(--cyan); }
+.nav-btns { display: flex; gap: 10px; align-items: center; }
+.nav-btn-login { font-family: var(--body); font-size: 13px; font-weight: 600; color: var(--cyan); background: transparent; padding: 8px 18px; text-decoration: none; border: 1px solid var(--border-bright); border-radius: 6px; transition: all 0.2s; }
+.nav-btn-login:hover { background: var(--cyan-pale); border-color: var(--cyan); }
+.nav-btn-cta { font-family: var(--body); font-size: 13px; font-weight: 600; color: var(--bg); background: var(--cyan); padding: 8px 18px; text-decoration: none; border-radius: 6px; transition: background 0.2s; }
+.nav-btn-cta:hover { background: var(--cyan-dim); }
+
+/* HERO */
+.hero { min-height: 100vh; display: flex; flex-direction: column; justify-content: flex-end; padding: 64px 48px 0; position: relative; overflow: hidden; }
+.hero-grid { position: absolute; inset: 0; background-image: linear-gradient(rgba(0,229,208,0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(0,229,208,0.03) 1px, transparent 1px); background-size: 80px 80px; mask-image: radial-gradient(ellipse 80% 80% at 50% 50%, black 30%, transparent 100%); }
+.hero-accent { position: absolute; top: 20%; left: 50%; transform: translateX(-50%); width: 800px; height: 400px; background: radial-gradient(ellipse, rgba(0,229,208,0.06) 0%, transparent 70%); pointer-events: none; }
+.hero-content { position: relative; z-index: 2; max-width: 1100px; }
+.hero-tag { display: inline-flex; align-items: center; gap: 10px; font-family: var(--mono); font-size: 12px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--cyan); margin-bottom: 28px; opacity: 0; animation: up 0.6s 0.1s forwards; }
+.hero-tag::before { content: '✦'; font-size: 10px; }
+.hero-h1 { font-family: var(--heading); font-size: clamp(72px, 10vw, 140px); line-height: 0.95; letter-spacing: -0.03em; font-weight: 900; color: var(--white); margin-bottom: 48px; opacity: 0; animation: up 0.7s 0.2s forwards; }
+.hero-h1 em { font-style: normal; color: var(--cyan); }
+.hero-sub-row { display: grid; grid-template-columns: 1fr 1fr; gap: 48px; padding-bottom: 56px; border-bottom: 1px solid var(--border); opacity: 0; animation: up 0.7s 0.35s forwards; }
+.hero-p { font-size: 18px; font-weight: 400; line-height: 1.7; color: var(--text-mid); max-width: 520px; }
+.hero-p strong { color: var(--text); font-weight: 600; }
+.hero-right { display: flex; flex-direction: column; justify-content: space-between; gap: 24px; }
+.hero-actions { display: flex; gap: 12px; align-items: center; }
+.btn-primary { font-family: var(--body); font-size: 14px; font-weight: 600; color: var(--bg); background: var(--cyan); padding: 14px 28px; text-decoration: none; border-radius: 8px; transition: background 0.2s; display: inline-flex; align-items: center; gap: 8px; }
+.btn-primary::after { content: '→'; }
+.btn-primary:hover { background: var(--cyan-dim); }
+.btn-outline { font-family: var(--body); font-size: 14px; font-weight: 500; color: var(--text-mid); padding: 14px 28px; text-decoration: none; border: 1px solid var(--border-bright); border-radius: 8px; transition: all 0.2s; }
+.btn-outline:hover { color: var(--cyan); border-color: var(--cyan); }
+.hero-stats { display: flex; gap: 40px; }
+.hstat-n { font-family: var(--heading); font-size: 32px; font-weight: 700; color: var(--white); display: block; margin-bottom: 2px; letter-spacing: -0.02em; }
+.hstat-n span { color: var(--cyan); font-weight: 500; }
+.hstat-l { font-family: var(--mono); font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--text-dim); }
+@keyframes up { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+
+/* SECTION BASE */
+.s { padding: 110px 48px; }
+.s-inner { max-width: 1100px; margin: 0 auto; }
+.label { font-family: var(--mono); font-size: 11px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--cyan); margin-bottom: 16px; }
+.h2 { font-family: var(--heading); font-size: clamp(44px, 5.5vw, 72px); letter-spacing: -0.03em; line-height: 1.0; font-weight: 900; color: var(--white); margin-bottom: 16px; }
+.h2 em { font-style: normal; color: var(--cyan); }
+.lead { font-size: 17px; font-weight: 400; line-height: 1.75; color: var(--text-mid); max-width: 560px; }
+.split-header { display: grid; grid-template-columns: 1fr 1fr; gap: 64px; align-items: end; margin-bottom: 64px; }
+
+/* FRAGMENTATION */
+.frag-s { background: var(--bg); border-top: 1px solid var(--border); }
+.frag-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 1px; background: var(--border); border-radius: 12px; overflow: hidden; }
+.frag-card { background: var(--bg-3); padding: 36px 24px; position: relative; overflow: hidden; cursor: default; transition: background 0.25s; }
+.frag-card:hover { background: var(--bg-4); }
+.frag-card-num { font-family: var(--heading); font-size: 56px; font-weight: 900; color: rgba(0,229,208,0.04); line-height: 1; position: absolute; right: 12px; top: 10px; }
+.frag-card-icon { width: 36px; height: 36px; background: rgba(255,68,102,0.08); border: 1px solid rgba(255,68,102,0.15); border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 16px; margin-bottom: 20px; }
+.frag-card-title { font-family: var(--heading); font-size: 18px; font-weight: 700; letter-spacing: -0.01em; color: var(--white); line-height: 1.2; margin-bottom: 10px; }
+.frag-card-desc { font-size: 12px; font-weight: 400; line-height: 1.65; color: var(--text-dim); }
+
+/* BEFORE / AFTER */
+.problem-s { background: var(--bg-2); border-top: 1px solid var(--border); }
+.problem-cols { display: grid; grid-template-columns: 1fr 1fr; gap: 64px; margin-top: 64px; }
+.problem-col-label { font-family: var(--mono); font-size: 10px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--text-dim); margin-bottom: 24px; padding-bottom: 16px; border-bottom: 1px solid var(--border); }
+.old-way { border-left: 3px solid var(--red); padding-left: 24px; }
+.new-way { border-left: 3px solid var(--cyan); padding-left: 24px; }
+.way-item { margin-bottom: 28px; }
+.way-item:last-child { margin-bottom: 0; }
+.way-title { font-size: 15px; font-weight: 700; color: var(--text); margin-bottom: 6px; }
+.old-way .way-title { color: rgba(255,255,255,0.5); }
+.way-desc { font-size: 13px; font-weight: 400; line-height: 1.65; color: var(--text-dim); }
+.new-way .way-desc { color: var(--text-mid); }
+
+/* PILLARS & CARDS */
+.pillars-s { background: var(--bg); }
+.pillars-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1px; background: var(--border); border-radius: 12px; overflow: hidden; }
+.pillar { background: var(--bg-3); padding: 48px 36px; position: relative; overflow: hidden; cursor: default; transition: background 0.25s; }
+.pillar:hover { background: var(--bg-4); }
+.pillar-num { font-family: var(--heading); font-size: 72px; font-weight: 900; color: rgba(0,229,208,0.04); line-height: 1; position: absolute; right: 20px; top: 16px; }
+.pillar-icon { width: 44px; height: 44px; background: var(--cyan-pale); border: 1px solid rgba(0,229,208,0.15); border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 20px; margin-bottom: 28px; }
+.pillar-name { font-family: var(--mono); font-size: 10px; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; color: var(--cyan); margin-bottom: 10px; }
+.pillar-title { font-family: var(--heading); font-size: 28px; font-weight: 700; letter-spacing: -0.02em; color: var(--white); line-height: 1.15; margin-bottom: 14px; }
+.pillar-desc { font-size: 14px; font-weight: 400; line-height: 1.7; color: var(--text-mid); margin-bottom: 28px; }
+.pillar-features { list-style: none; display: flex; flex-direction: column; gap: 8px; }
+.pillar-features li { font-family: var(--mono); font-size: 11px; color: var(--text-dim); display: flex; gap: 10px; align-items: flex-start; line-height: 1.4; }
+.pillar-features li::before { content: '→'; color: var(--cyan); flex-shrink: 0; }
+
+/* COBOT OS */
+.cobotOS-s { background: var(--bg-2); border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); position: relative; overflow: hidden; }
+.cobotOS-s::before { content: 'OS'; position: absolute; right: -30px; bottom: -60px; font-family: var(--heading); font-size: 320px; font-weight: 900; color: rgba(0,229,208,0.02); line-height: 1; pointer-events: none; }
+.five-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 1px; background: var(--border); margin-bottom: 48px; border-radius: 12px; overflow: hidden; }
+.five-card { background: var(--bg-3); padding: 36px 24px; transition: background 0.25s; cursor: default; }
+.five-card:hover { background: var(--bg-4); }
+.five-card-icon { width: 40px; height: 40px; background: var(--cyan-pale); border: 1px solid rgba(0,229,208,0.15); border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 18px; margin-bottom: 20px; }
+.five-card-title { font-family: var(--heading); font-size: 17px; font-weight: 700; letter-spacing: -0.01em; color: var(--white); line-height: 1.2; margin-bottom: 10px; }
+.five-card-desc { font-size: 12px; font-weight: 400; line-height: 1.6; color: var(--text-dim); }
+
+/* SPECTRUM */
+.spectrum-bar { background: var(--bg-4); border: 1px solid var(--border); border-radius: 12px; padding: 40px; }
+.spectrum-label { font-family: var(--mono); font-size: 10px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--text-dim); margin-bottom: 24px; }
+.spectrum-track { display: flex; height: 52px; margin-bottom: 20px; border-radius: 8px; overflow: hidden; }
+.spectrum-seg { flex: 1; display: flex; align-items: center; justify-content: center; font-family: var(--mono); font-size: 10px; letter-spacing: 0.04em; text-transform: uppercase; color: var(--bg); font-weight: 700; }
+.spectrum-seg:nth-child(1) { background: var(--cyan); opacity: 0.35; }
+.spectrum-seg:nth-child(2) { background: var(--cyan); opacity: 0.5; }
+.spectrum-seg:nth-child(3) { background: var(--cyan); opacity: 0.65; }
+.spectrum-seg:nth-child(4) { background: var(--cyan); opacity: 0.8; }
+.spectrum-seg:nth-child(5) { background: var(--cyan); }
+.spectrum-arrow { display: flex; justify-content: space-between; align-items: center; }
+.spectrum-arrow-label { font-family: var(--mono); font-size: 10px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--text-dim); }
+.spectrum-arrow-line { flex: 1; height: 1px; background: linear-gradient(90deg, var(--text-dim), var(--cyan)); margin: 0 16px; position: relative; }
+.spectrum-arrow-line::after { content: '→'; position: absolute; right: -8px; top: -8px; color: var(--cyan); font-size: 14px; }
+
+/* ARCHITECTURE */
+.arch-s { background: var(--bg); }
+.arch-layers { display: flex; flex-direction: column; border-radius: 12px; overflow: hidden; }
+.arch-layer { display: grid; grid-template-columns: 180px 1fr; border: 1px solid var(--border); border-bottom: none; transition: background 0.25s; }
+.arch-layer:last-child { border-bottom: 1px solid var(--border); }
+.arch-layer:hover { background: var(--bg-3); }
+.arch-layer-label { background: var(--bg-3); padding: 28px 24px; display: flex; flex-direction: column; justify-content: center; border-right: 1px solid var(--border); }
+.arch-layer-n { font-family: var(--mono); font-size: 10px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--cyan); margin-bottom: 6px; }
+.arch-layer-name { font-family: var(--heading); font-size: 20px; font-weight: 700; letter-spacing: -0.01em; color: var(--white); line-height: 1.2; }
+.arch-layer-body { padding: 28px 32px; display: flex; align-items: center; gap: 32px; }
+.arch-layer-desc { font-size: 13px; font-weight: 400; line-height: 1.65; color: var(--text-mid); flex: 1; }
+.arch-tags { display: flex; gap: 6px; flex-wrap: wrap; flex-shrink: 0; max-width: 320px; }
+.arch-tag { font-family: var(--mono); font-size: 9px; letter-spacing: 0.06em; text-transform: uppercase; color: var(--text-dim); padding: 5px 10px; border: 1px solid var(--border); border-radius: 4px; white-space: nowrap; }
+.arch-hitl { margin-top: 16px; padding: 20px 28px; background: var(--cyan-pale); border: 1px solid rgba(0,229,208,0.12); border-radius: 10px; display: flex; align-items: center; gap: 16px; }
+.arch-hitl-icon { font-size: 22px; flex-shrink: 0; }
+.arch-hitl-text { font-size: 14px; font-weight: 500; color: var(--text); line-height: 1.5; }
+.arch-hitl-text strong { color: var(--cyan); font-weight: 700; }
+
+/* PERCEPTION */
+.percep-s { background: var(--bg-2); border-top: 1px solid var(--border); }
+
+/* DIFFERENTIATION */
+.diff-s { background: var(--bg); border-top: 1px solid var(--border); }
+.diff-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 1px; background: var(--border); border-radius: 12px; overflow: hidden; }
+.diff-card { background: var(--bg-3); padding: 40px 24px; cursor: default; transition: background 0.25s; }
+.diff-card:hover { background: var(--bg-4); }
+.diff-card-stat { font-family: var(--heading); font-size: 40px; font-weight: 800; letter-spacing: -0.02em; color: var(--cyan); line-height: 1; margin-bottom: 6px; }
+.diff-card-sub { font-family: var(--mono); font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--text-dim); margin-bottom: 18px; display: block; }
+.diff-card-desc { font-size: 13px; font-weight: 400; line-height: 1.6; color: var(--text-mid); }
+
+/* INDUSTRIES */
+.ind-s { background: var(--bg-2); border-top: 1px solid var(--border); }
+.ind-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 1px; background: var(--border); border-radius: 12px; overflow: hidden; }
+.ind-card { background: var(--bg-3); padding: 40px 28px; transition: background 0.25s; cursor: default; }
+.ind-card:hover { background: var(--bg-4); }
+.ind-card-icon { width: 44px; height: 44px; background: var(--cyan-pale); border: 1px solid rgba(0,229,208,0.15); border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 20px; margin-bottom: 24px; }
+.ind-card-title { font-family: var(--heading); font-size: 20px; font-weight: 700; letter-spacing: -0.01em; color: var(--white); line-height: 1.2; margin-bottom: 12px; }
+.ind-card-desc { font-size: 13px; font-weight: 400; line-height: 1.65; color: var(--text-mid); margin-bottom: 20px; }
+.ind-card-metric { font-family: var(--mono); font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--cyan); padding-top: 16px; border-top: 1px solid var(--border); }
+
+/* PARTNERS */
+.vs-s { background: var(--bg-2); border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); }
+
+/* HOW IT WORKS */
+.together-s { background: var(--bg); }
+.together-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 64px; align-items: start; margin-top: 64px; }
+.together-steps { display: flex; flex-direction: column; }
+.tstep { display: grid; grid-template-columns: 48px 1fr; gap: 20px; padding: 28px 0; border-bottom: 1px solid var(--border); cursor: default; }
+.tstep:last-child { border-bottom: none; }
+.tstep-n { font-family: var(--heading); font-size: 28px; font-weight: 700; color: var(--text-dim); padding-top: 2px; }
+.tstep-title { font-size: 16px; font-weight: 600; color: var(--text); margin-bottom: 8px; }
+.tstep-desc { font-size: 13px; font-weight: 400; line-height: 1.65; color: var(--text-mid); }
+.together-right { background: var(--bg-3); border: 1px solid var(--border); border-radius: 12px; padding: 40px; position: sticky; top: 80px; }
+.tr-label { font-family: var(--mono); font-size: 10px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--text-dim); margin-bottom: 24px; }
+.metric-row { display: flex; justify-content: space-between; align-items: baseline; padding: 14px 0; border-bottom: 1px solid var(--border); }
+.metric-row:last-of-type { border-bottom: none; }
+.metric-label { font-size: 13px; font-weight: 400; color: var(--text-mid); }
+.metric-val { font-family: var(--heading); font-size: 26px; font-weight: 700; color: var(--cyan); }
+.metric-val span { color: var(--cyan); font-weight: 700; }
+
+/* WHO */
+.who-s { background: var(--bg-2); border-top: 1px solid var(--border); }
+.who-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1px; background: var(--border); margin-top: 64px; border-radius: 12px; overflow: hidden; }
+.who-card { background: var(--bg-3); padding: 40px 32px; transition: background 0.25s; cursor: default; }
+.who-card:hover { background: var(--bg-4); }
+.who-role { font-family: var(--mono); font-size: 10px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--cyan); margin-bottom: 16px; }
+.who-name { font-size: 18px; font-weight: 700; color: var(--white); margin-bottom: 12px; line-height: 1.3; }
+.who-desc { font-size: 13px; font-weight: 400; line-height: 1.7; color: var(--text-mid); margin-bottom: 20px; }
+.who-gets { list-style: none; display: flex; flex-direction: column; gap: 7px; }
+.who-gets li { font-size: 12px; color: var(--text-dim); display: flex; gap: 8px; align-items: flex-start; }
+.who-gets li::before { content: '—'; color: var(--cyan); flex-shrink: 0; }
+
+/* CTA */
+.cta-s { background: var(--cyan); padding: 100px 48px; position: relative; overflow: hidden; }
+.cta-watermark { position: absolute; right: -20px; bottom: -40px; font-family: var(--heading); font-size: 260px; font-weight: 900; color: rgba(0,0,0,0.07); line-height: 1; pointer-events: none; user-select: none; }
+.cta-inner { max-width: 1100px; margin: 0 auto; display: grid; grid-template-columns: 1fr auto; gap: 80px; align-items: center; position: relative; z-index: 2; }
+.cta-h2 { font-family: var(--heading); font-size: clamp(44px, 5.5vw, 72px); font-weight: 900; letter-spacing: -0.03em; line-height: 1.0; color: var(--bg); margin-bottom: 16px; }
+.cta-sub { font-size: 16px; font-weight: 400; line-height: 1.6; color: rgba(10,13,16,0.55); max-width: 440px; }
+.cta-actions { display: flex; flex-direction: column; gap: 12px; flex-shrink: 0; }
+.btn-dark { font-family: var(--body); font-size: 14px; font-weight: 600; color: var(--cyan); background: var(--bg); padding: 16px 32px; text-decoration: none; text-align: center; border-radius: 8px; transition: background 0.2s; white-space: nowrap; display: inline-flex; align-items: center; justify-content: center; gap: 8px; }
+.btn-dark::after { content: '→'; }
+.btn-dark:hover { background: var(--bg-3); }
+.btn-ghost-dark { font-family: var(--body); font-size: 14px; font-weight: 500; color: rgba(10,13,16,0.55); padding: 16px 32px; text-decoration: none; text-align: center; border: 1px solid rgba(10,13,16,0.2); border-radius: 8px; transition: all 0.2s; white-space: nowrap; }
+.btn-ghost-dark:hover { background: rgba(10,13,16,0.08); color: var(--bg); }
+
+/* FOOTER */
+footer { background: var(--bg); border-top: 1px solid var(--border); padding: 64px 48px 40px; }
+.footer-inner { max-width: 1100px; margin: 0 auto; display: grid; grid-template-columns: 2fr 1fr 1fr; gap: 64px; padding-bottom: 48px; border-bottom: 1px solid var(--border); margin-bottom: 32px; }
+.footer-logo { font-family: var(--heading); font-size: 22px; font-weight: 600; color: var(--white); margin-bottom: 14px; }
+.footer-desc { font-size: 13px; font-weight: 400; line-height: 1.7; color: var(--text-dim); max-width: 300px; }
+.fcol-label { font-family: var(--mono); font-size: 9px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--text-dim); margin-bottom: 20px; }
+.flinks { list-style: none; display: flex; flex-direction: column; gap: 12px; }
+.flinks a { font-size: 13px; color: var(--text-dim); text-decoration: none; transition: color 0.2s; }
+.flinks a:hover { color: var(--cyan); }
+.footer-bottom { max-width: 1100px; margin: 0 auto; display: flex; justify-content: space-between; align-items: center; }
+.fcopy { font-family: var(--mono); font-size: 10px; letter-spacing: 0.08em; color: var(--text-dim); }
+
+/* RESPONSIVE */
+@media (max-width: 900px) {
+  nav { padding: 0 24px; }
+  .nav-links { display: none; }
+  .hero { padding: 64px 24px 0; }
+  .hero-h1 { font-size: 64px; }
+  .hero-sub-row { grid-template-columns: 1fr; gap: 32px; }
+  .s { padding: 72px 24px; }
+  .split-header, .problem-cols, .together-grid, .cta-inner, .footer-inner { grid-template-columns: 1fr; gap: 40px; }
+  .pillars-grid, .who-grid, .five-grid, .diff-grid, .ind-grid, .frag-grid { grid-template-columns: 1fr; }
+  .together-right { position: static; }
+  .cta-s { padding: 72px 24px; }
+  footer { padding: 48px 24px 32px; }
+  .footer-bottom { flex-direction: column; gap: 16px; text-align: center; }
+  .arch-layer { grid-template-columns: 1fr; }
+  .arch-layer-label { border-right: none; border-bottom: 1px solid var(--border); }
+  .arch-layer-body { flex-direction: column; gap: 16px; }
+  .arch-tags { max-width: 100%; }
+  .hero-stats { flex-wrap: wrap; gap: 24px; }
+}
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <a class="logo" href="#">
+    <div class="logo-icon"><span></span><span></span></div>
+    <span class="logo-text">nventr</span>
+  </a>
+  <ul class="nav-links">
+    <li><a href="#problem">Before & After</a></li>
+    <li><a href="#pillars">Platform</a></li>
+    <li><a href="#architecture">Architecture</a></li>
+    <li><a href="#industries">Industries</a></li>
+    <li><a href="#how">How It Works</a></li>
+  </ul>
+  <div class="nav-btns">
+    <a class="nav-btn-login" href="#">Login</a>
+    <a class="nav-btn-cta" href="#contact">Contact Us</a>
+  </div>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-grid"></div>
+  <div class="hero-accent"></div>
+  <div class="hero-content">
+    <div class="hero-tag">Operating System for Robots</div>
+    <h1 class="hero-h1">Every Cobot.<br>Every Fleet.<br><em>One OS.</em></h1>
+    <div class="hero-sub-row">
+      <p class="hero-p">Cobots, drones, AMRs, forklifts, and people. <strong>nventr is the intelligent orchestration layer that unifies your entire fleet</strong> into a single AI-driven environment. Real-time motion control, human-robot collaboration, and safety compliance, protected by 17 key AI patents.</p>
+      <div class="hero-right">
+        <div class="hero-actions">
+          <a class="btn-primary" href="#contact">Book A Demo</a>
+          <a class="btn-outline" href="#pillars">See the Platform</a>
+        </div>
+        <div class="hero-stats">
+          <div><span class="hstat-n">17<span> patents</span></span><span class="hstat-l">Proprietary AI IP</span></div>
+          <div><span class="hstat-n">30<span>M+</span></span><span class="hstat-l">Monthly transactions</span></div>
+          <div><span class="hstat-n">400<span>+</span></span><span class="hstat-l">Data sources</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+
+
+
+
+<!-- BEFORE / AFTER -->
+<section class="s problem-s" id="problem">
+  <div class="s-inner">
+    <div class="label">Before & After nventr</div>
+    <h2 class="h2">Great Robots.<br><em>Fully Unlocked.</em></h2>
+    <p class="lead" style="margin-top:20px;">Hardware alone doesn't run a warehouse. nventr is the software and operations layer that turns your robot investment into a system that actually performs, starting day one and every shift after.</p>
+    <div class="problem-cols">
+      <div>
+        <div class="problem-col-label">Without nventr</div>
+        <div class="old-way">
+          <div class="way-item"><div class="way-title">Robots stop when autonomy fails</div><div class="way-desc">No fallback means a stuck robot is a stopped robot. Your floor team has to intervene manually, breaking their own workflow to fix a machine that should be self-sufficient.</div></div>
+          <div class="way-item"><div class="way-title">Your cameras are just recording</div><div class="way-desc">Footage sits on a hard drive. Nobody's watching it in real time. When something goes wrong, you find out after the fact.</div></div>
+          <div class="way-item"><div class="way-title">No visibility into human-robot interaction</div><div class="way-desc">You know robots are moving and people are working. You don't know how well they're coexisting or where friction is costing throughput.</div></div>
+          <div class="way-item"><div class="way-title">Operations managed by feel</div><div class="way-desc">Shift supervisors make decisions based on what they can physically see. No aggregate picture across time, zones, and robot types.</div></div>
+        </div>
+      </div>
+      <div>
+        <div class="problem-col-label">With nventr</div>
+        <div class="new-way">
+          <div class="way-item"><div class="way-title">A human takes over in seconds</div><div class="way-desc">When a robot hits a situation autonomy can't handle, a trained teleoperator takes control remotely, with full video, full control, and zero downtime.</div></div>
+          <div class="way-item"><div class="way-title">Your cameras become a live operations view</div><div class="way-desc">nventr connects to the cameras you already have and turns them intelligent. Real-time picture of every zone, every robot, every shift.</div></div>
+          <div class="way-item"><div class="way-title">Coexistence is measured, not guessed</div><div class="way-desc">nventr tracks how humans and robots move through shared spaces, identifying where they work well together and where they're slowing each other down.</div></div>
+          <div class="way-item"><div class="way-title">One dashboard tells the whole story</div><div class="way-desc">Fleet status, teleop activity, coexistence patterns, anomaly alerts, all in one place, built for the people running the floor.</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- THREE PILLARS -->
+<section class="s pillars-s" id="pillars">
+  <div class="s-inner">
+    <div class="split-header">
+      <div><div class="label">The Platform</div><h2 class="h2">Three Things<br><em>Done Right.</em></h2></div>
+      <p class="lead">nventr is built around three capabilities that no single vendor has combined before. Each one works on its own. Together, they give you a warehouse that actually runs.</p>
+    </div>
+    <div class="pillars-grid">
+      <div class="pillar"><div class="pillar-num">01</div><div class="pillar-icon">🎮</div><div class="pillar-name">Pillar One</div><div class="pillar-title">Teleoperation</div><div class="pillar-desc">Autonomy is good. It isn't perfect. When a robot gets stuck, a human takes over. Immediately. Remotely. With full control.</div></div>
+      <div class="pillar"><div class="pillar-num">02</div><div class="pillar-icon">📷</div><div class="pillar-name">Pillar Two</div><div class="pillar-title">Warehouse Monitoring</div><div class="pillar-desc">You already have cameras. nventr makes them intelligent. A live operational picture of your entire floor, without buying new hardware.</div></div>
+      <div class="pillar"><div class="pillar-num">03</div><div class="pillar-icon">👥</div><div class="pillar-name">Pillar Three</div><div class="pillar-title">Coexistence Analytics</div><div class="pillar-desc">Humans and robots in the same space is complicated. nventr measures where it works, where friction exists, and where opportunity lives.</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- LAYERED ARCHITECTURE -->
+<section class="s arch-s" id="architecture">
+  <div class="s-inner">
+    <div class="split-header">
+      <div><div class="label">System Architecture</div><h2 class="h2">Layered by<br><em>Design.</em></h2></div>
+      <p class="lead">Certified safety at the foundation. Intelligent autonomy in the middle. Centralized orchestration at the top. Human oversight woven throughout, ISO safety-compliant from the ground up from the ground up.</p>
+    </div>
+    <div class="arch-layers">
+      <div class="arch-layer"><div class="arch-layer-label"><div class="arch-layer-n">Layer 3</div><div class="arch-layer-name">Orchestration</div></div><div class="arch-layer-body"><div class="arch-layer-desc">Centralized multi-site command and control. Agent-orchestrated workflows with agentic AI triggers, people-in-the-loop exception handling, and dashboards delivering insight across your entire fleet.</div><div class="arch-tags"><span class="arch-tag">Agent Orchestration</span><span class="arch-tag">HITL</span><span class="arch-tag">Video</span><span class="arch-tag">Tele-Ops</span><span class="arch-tag">Multi-Site</span></div></div></div>
+      <div class="arch-layer"><div class="arch-layer-label"><div class="arch-layer-n">Layer 2</div><div class="arch-layer-name">Autonomy</div></div><div class="arch-layer-body"><div class="arch-layer-desc">Navigation, vision, and dynamic control. Every cobot and AMR sees its environment in three dimensions, scores confidence, and acts or escalates. Low-confidence auto-escalation trains the system continuously.</div><div class="arch-tags"><span class="arch-tag">Navigation</span><span class="arch-tag">Vision</span><span class="arch-tag">Dynamic Control</span><span class="arch-tag">Confidence Scoring</span></div></div></div>
+      <div class="arch-layer"><div class="arch-layer-label"><div class="arch-layer-n">Layer 1</div><div class="arch-layer-name">Safety & Execution</div></div><div class="arch-layer-body"><div class="arch-layer-desc">Certified safety, sensors, and ISO compliance at the foundation. Every motion is bounded by safety constraints before any autonomy or orchestration takes over.</div><div class="arch-tags"><span class="arch-tag">Certified Safety</span><span class="arch-tag">Sensors</span><span class="arch-tag">ISO Compliance</span><span class="arch-tag">Motion Bounds</span></div></div></div>
+    </div>
+    <div class="arch-hitl"><div class="arch-hitl-icon">👤</div><div class="arch-hitl-text"><strong>Humans-in-the-Loop</strong> at every stage, from tele-assist and approval to recovery. 182,000 on-demand operators, AI trainers, and annotators ensure enterprise-grade trust and safety compliance.</div></div>
+  </div>
+</section>
+
+<!-- PERCEPTION ENGINE -->
+<section class="s percep-s" id="perception">
+  <div class="s-inner">
+    <div class="split-header">
+      <div><div class="label">Perception Engine</div><h2 class="h2">See the Whole<br><em>Environment.</em></h2></div>
+      <p class="lead">LiDAR and computer vision through proprietary neural networks in a unified perception pipeline. Powered by 300+ public and 100+ proprietary data sources for context-rich, high-confidence cobot autonomy.</p>
+    </div>
+    <div class="five-grid" style="margin-bottom:0;">
+      <div class="five-card"><div class="five-card-icon">🛡️</div><div class="five-card-title">Obstacle Detection</div><div class="five-card-desc">Real-time identification and avoidance of static and dynamic obstacles across every zone.</div></div>
+      <div class="five-card"><div class="five-card-icon">📦</div><div class="five-card-title">Object Identification</div><div class="five-card-desc">Pallet, package, and asset recognition for intelligent task routing and inventory awareness.</div></div>
+      <div class="five-card"><div class="five-card-icon">🚶</div><div class="five-card-title">Human Tracking</div><div class="five-card-desc">Track personnel for safety compliance and dynamic path adjustment in shared workspaces.</div></div>
+      <div class="five-card"><div class="five-card-icon">🔀</div><div class="five-card-title">Congestion Analytics</div><div class="five-card-desc">Monitor traffic patterns, predict bottlenecks, and reroute fleets proactively.</div></div>
+      <div class="five-card"><div class="five-card-icon">📊</div><div class="five-card-title">Confidence Scoring</div><div class="five-card-desc">Every perception output carries a confidence level that triggers autonomy or human escalation.</div></div>
+    </div>
+  </div>
+</section>
+
+
+
+<!-- INDUSTRIES -->
+<section class="s ind-s" id="industries">
+  <div class="s-inner">
+    <div class="split-header">
+      <div><div class="label">Industry Applications</div><h2 class="h2">Where nventr<br><em>Delivers.</em></h2></div>
+      <p class="lead">From logistics yards to regulated environments. nventr's orchestration layer adapts to the operational demands of every domain.</p>
+    </div>
+    <div class="ind-grid">
+      <div class="ind-card"><div class="ind-card-icon">🏭</div><div class="ind-card-title">Logistics & Warehouses</div><div class="ind-card-desc">Controlling AMR fleets, forklifts, and drones with AI-based task assignment and predictive routing across yards, warehouses, and field ops.</div><div class="ind-card-metric">→ Real-time decisions across fleets</div></div>
+      <div class="ind-card"><div class="ind-card-icon">⚙️</div><div class="ind-card-title">Industrial & Manufacturing</div><div class="ind-card-desc">Cross-domain automation merging robotic and digital workflows with human-assisted exceptions. Eliminate redundancy and rework.</div><div class="ind-card-metric">→ Cost reduction at scale</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- PARTNERS / HARDWARE -->
+<section class="s vs-s" id="partners">
+  <div class="s-inner">
+    <div class="split-header">
+      <div><div class="label">Built to Work With the Best</div><h2 class="h2">Hardware Meets<br><em>Operations.</em></h2></div>
+      <p class="lead">nventr doesn't replace your robot hardware. It completes it. We partner with leading robot manufacturers to deliver the software and operations layer their hardware was always meant to have.</p>
+    </div>
+    <div class="pillars-grid">
+      <div class="pillar"><div class="pillar-num">↑</div><div class="pillar-icon">🤝</div><div class="pillar-name">Hardware Partners</div><div class="pillar-title">Your Robots, Fully Operated</div><div class="pillar-desc">We work directly with your robot vendor to integrate at the control layer, so nventr's teleoperation, monitoring, and analytics work seamlessly with the hardware you've chosen.</div></div>
+      <div class="pillar"><div class="pillar-num">↑</div><div class="pillar-icon">📡</div><div class="pillar-name">Existing Infrastructure</div><div class="pillar-title">Use What You Have</div><div class="pillar-desc">nventr connects to the cameras, network, and systems already in your warehouse. No rip and replace. The software layer sits on top of your existing investments.</div></div>
+      <div class="pillar"><div class="pillar-num">↑</div><div class="pillar-icon">🔄</div><div class="pillar-name">Ongoing Partnership</div><div class="pillar-title">One Team for the Long Run</div><div class="pillar-desc">When something needs attention, whether it's the software, the integration, or the operation, there's one team accountable. Not three vendors pointing at each other.</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- HOW IT COMES TOGETHER -->
+<section class="s together-s" id="how">
+  <div class="s-inner">
+    <div class="label">How It Works</div>
+    <h2 class="h2">Deployed. Running.<br><em>Improving.</em></h2>
+    <div class="together-grid">
+      <div class="together-steps">
+        <div class="tstep"><div class="tstep-n">01</div><div><div class="tstep-title">We learn your warehouse</div><div class="tstep-desc">Before anything is deployed, we map your floor, understand your workflows, and configure the system around how your operation actually runs.</div></div></div>
+        <div class="tstep"><div class="tstep-n">02</div><div><div class="tstep-title">Robots go live</div><div class="tstep-desc">Autonomous robots are deployed and begin operating. When something falls outside what autonomy can manage, a teleoperation request is automatically raised.</div></div></div>
+        <div class="tstep"><div class="tstep-n">03</div><div><div class="tstep-title">Your cameras become intelligent</div><div class="tstep-desc">We connect to your existing camera infrastructure. Your ops team gets a live monitoring dashboard covering floor visibility,, robot status, zone activity.</div></div></div>
+        <div class="tstep"><div class="tstep-n">04</div><div><div class="tstep-title">Coexistence data starts accumulating</div><div class="tstep-desc">The system tracks how humans and robots share space. The system identifies where they work well together, where they don't, and where small changes create big impact.</div></div></div>
+        <div class="tstep"><div class="tstep-n">05</div><div><div class="tstep-title">The system gets better over time</div><div class="tstep-desc">Every teleop session, anomaly, and coexistence pattern feeds back into robot behavior. The longer nventr runs, the more it's tuned to your warehouse.</div></div></div>
+      </div>
+      <div class="together-right">
+        <div class="tr-label">What your team sees</div>
+        <div class="metric-row"><span class="metric-label">Robots operating autonomously</span><span class="metric-val">94<span>%</span></span></div>
+        <div class="metric-row"><span class="metric-label">Teleop interventions resolved</span><span class="metric-val">&lt;<span>90s</span></span></div>
+        <div class="metric-row"><span class="metric-label">Floor coverage via existing cameras</span><span class="metric-val">100<span>%</span></span></div>
+        <div class="metric-row"><span class="metric-label">Human-robot incidents flagged</span><span class="metric-val">&lt;<span>3s</span></span></div>
+        <div class="metric-row"><span class="metric-label">Vendors you're managing</span><span class="metric-val">1</span></div>
+        <div style="margin-top:24px;padding-top:20px;border-top:1px solid var(--border);"><div style="font-size:13px;font-weight:400;line-height:1.7;color:var(--text-dim);">All visible to your ops, safety, and management teams through one dashboard, in real time, with no IT overhead.</div></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- WHO -->
+<section class="s who-s" id="who">
+  <div class="s-inner">
+    <div class="label">Who It's For</div>
+    <h2 class="h2">If You Run a<br><em>Warehouse,</em> This Is for You.</h2>
+    <div class="who-grid">
+      <div class="who-card"><div class="who-role">VP of Operations</div><div class="who-name">You need robots to run the floor, not create new problems</div><div class="who-desc">The promise of warehouse robotics is efficiency. The reality is often robots that get stuck, vendors that don't talk to each other, and a floor team that doesn't trust the technology. nventr changes that.</div></div>
+      <div class="who-card"><div class="who-role">Safety Manager</div><div class="who-name">You need to know what's happening when humans and robots share space</div><div class="who-desc">Human-robot coexistence is the biggest safety challenge in modern warehouses. Most operations are running blind. nventr gives you visibility before incidents happen.</div></div>
+      <div class="who-card"><div class="who-role">Executive / Owner</div><div class="who-name">You want to automate without betting on a single vendor's roadmap</div><div class="who-desc">Most robotics deployments require deep vendor commitments. nventr gives you one accountable partner for the whole system, with flexibility built in.</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- CTA -->
+<section class="cta-s" id="contact">
+  <div class="cta-watermark">NV</div>
+  <div class="cta-inner">
+    <div><h2 class="cta-h2">See It in Your<br>Warehouse.</h2><p class="cta-sub">We'll walk you through what a deployment looks like for your specific operation, covering your floor layout,, existing cameras, robot needs. No generic demo. No pressure.</p></div>
+    <div class="cta-actions"><a class="btn-dark" href="#">Book a Demo</a><a class="btn-ghost-dark" href="#">Talk to the Team</a></div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div class="footer-inner">
+    <div><div class="footer-logo">nventr</div><div class="footer-desc">The operating system for robots. Cobots, drones, AMRs, and people, orchestrated as one through intelligent fleet management, teleoperation, and coexistence analytics.</div></div>
+    <div><div class="fcol-label">Platform</div><ul class="flinks"><li><a href="#pillars">Teleoperation</a></li><li><a href="#pillars">Warehouse Monitoring</a></li><li><a href="#pillars">Coexistence Analytics</a></li><li><a href="#perception">Perception Engine</a></li><li><a href="#architecture">Architecture</a></li></ul></div>
+    <div><div class="fcol-label">Company</div><ul class="flinks"><li><a href="#">About</a></li><li><a href="#industries">Industries</a></li><li><a href="#">Contact</a></li><li><a href="#">Privacy</a></li><li><a href="#">Terms</a></li></ul></div>
+  </div>
+  <div class="footer-bottom"><div class="fcopy">© 2025 nventr. All rights reserved.</div><div class="fcopy">Every cobot, every fleet, every operator, one intelligent OS.</div></div>
+</footer>
+
+</body>
+</html>
